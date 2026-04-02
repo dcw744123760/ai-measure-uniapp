@@ -1,0 +1,44 @@
+{
+    "pages": [
+        {
+            "path": "pages/login/index",
+            "style": {
+                "navigationBarTitleText": "Login",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/measure/index",
+            "style": {
+                "navigationBarTitleText": "AI Measure",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/measureDetail/index",
+            "style": {
+                "navigationBarTitleText": "Detail",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/addMeasure/index",
+            "style": {
+                "navigationBarTitleText": "New Measurement",
+                "navigationStyle": "custom"
+            }
+        }
+    ],
+    "globalStyle": {
+        "navigationBarTextStyle": "black",
+        "navigationBarTitleText": "AI Measure",
+        "navigationBarBackgroundColor": "#FFFFFF",
+        "backgroundColor": "#F5F7FA"
+    },
+    "easycom": {
+        "autoscan": true,
+        "custom": {
+            "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
+        }
+    }
+}

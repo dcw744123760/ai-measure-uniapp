@@ -1,0 +1,41 @@
+{
+    "name": "AI Measure",
+    "appid": "__UNI__AIMEASURE",
+    "description": "AI Measurement System",
+    "versionName": "1.0.0",
+    "versionCode": "100",
+    "transformPx": false,
+    "app-plus": {
+        "usingComponents": true,
+        "nvueCompiler": "uni-app",
+        "splashscreen": {
+            "alwaysShowBeforeRender": true,
+            "waiting": true,
+            "autoclose": true,
+            "delay": 0
+        },
+        "modules": {},
+        "distribute": {
+            "android": {
+                "permissions": [
+                    "<uses-permission android:name=\"android.permission.INTERNET\"/>",
+                    "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
+                ]
+            },
+            "ios": {}
+        }
+    },
+    "h5": {
+        "devServer": {
+            "port": 8090,
+            "disableHostCheck": true,
+            "proxy": {
+                "/crm": {
+                    "target": "https://www.vm0123.com",
+                    "changeOrigin": true,
+                    "secure": false
+                }
+            }
+        }
+    }
+}
