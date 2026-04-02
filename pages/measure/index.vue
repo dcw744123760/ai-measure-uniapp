@@ -682,10 +682,10 @@
 								<view class="optRecordBar-cell optRecordBar-header"><text>{{ col.tip }}</text></view>
 								<view class="optRecordBar-cell optRecordBar-sub" :class="{ red: col.red }"><text>{{ col.ms }}</text></view>
 								<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'main', colIdx, col.itemType, col.r, 'R')">
-									<input type="text" class="optRecordBar-input" :value="col.r || ''" readonly />
+									<input type="text" class="optRecordBar-input" :value="col.r || ''" disabled  />
 								</view>
 								<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'main', colIdx, col.itemType, col.l, 'L')">
-									<input type="text" class="optRecordBar-input" :value="col.l || ''" readonly />
+									<input type="text" class="optRecordBar-input" :value="col.l || ''" disabled  />
 								</view>
 							</view>
 						</view>
@@ -714,10 +714,10 @@
 											<view class="optRecordBar-cell optRecordBar-header"><text>{{ col.tip }}</text></view>
 											<view class="optRecordBar-cell optRecordBar-sub" :class="{ red: col.red }"><text>{{ col.ms }}</text></view>
 											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'original', colIdx, col.itemType, col.r, 'R')">
-												<input type="text" class="optRecordBar-input" :value="col.r || ''" readonly />
+												<input type="text" class="optRecordBar-input" :value="col.r || ''" disabled  />
 											</view>
 											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'original', colIdx, col.itemType, col.l, 'L')">
-												<input type="text" class="optRecordBar-input" :value="col.l || ''" readonly />
+												<input type="text" class="optRecordBar-input" :value="col.l || ''" disabled  />
 											</view>
 										</view>
 									</view>
@@ -737,10 +737,10 @@
 											<view class="optRecordBar-cell optRecordBar-header"><text>{{ col.tip }}</text></view>
 											<view class="optRecordBar-cell optRecordBar-sub" :class="{ red: col.red }"><text>{{ col.ms }}</text></view>
 											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'auto', colIdx, col.itemType, col.r, 'R')">
-												<input type="text" class="optRecordBar-input" :value="col.r || ''" readonly />
+												<input type="text" class="optRecordBar-input" :value="col.r || ''" disabled  />
 											</view>
 											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'auto', colIdx, col.itemType, col.l, 'L')">
-												<input type="text" class="optRecordBar-input" :value="col.l || ''" readonly />
+												<input type="text" class="optRecordBar-input" :value="col.l || ''" disabled  />
 											</view>
 										</view>
 									</view>
@@ -1022,7 +1022,12 @@ export default {
 				x: 0,
 				y: 0,
 				lastStr: '',
-				list: []
+				list: [],
+				manualInputSection: '',
+				manualInputIndex: -1,
+				manualInputLR: '',
+				manualInputValue: '',
+				manualInputActive: false
 			},
 
 			addOptView: {
@@ -2726,8 +2731,67 @@ that.searchClient()
 			this.optPopup.show = false
 		},
 		opt_manualInput() {
-			this.optPopup.show = false
-			// Focus is handled naturally since the input is already there
+			var popup = this.optPopup
+			var section = popup.section || 'main'
+			var colIdx = popup.index
+			var lr = popup.LR
+			popup.show = false
+
+			// Use setTimeout to ensure popup is closed and DOM updated
+			setTimeout(function() {
+				try {
+					// uni-app compiles to uni-view, find by class
+					var allTables = document.querySelectorAll('.addOptCon .optRecordBar')
+					console.log('Found tables:', allTables.length, 'looking for section:', section, 'col:', colIdx, 'lr:', lr)
+
+					var tableIdx = section === 'main' ? 0 : section === 'original' ? 1 : 2
+					var table = allTables[tableIdx]
+					if (!table) { console.log('Table not found at index', tableIdx); return }
+
+					// Get all column li elements (first is label, rest are data columns)
+					var cols = table.querySelectorAll('[class*="optRecordBar-li"]')
+					console.log('Found cols:', cols.length)
+
+					// colIdx + 1 because first col is label
+					var col = cols[colIdx + 1]
+					if (!col) { console.log('Col not found at', colIdx + 1); return }
+
+					// Get val cells in this column (R=index 0, L=index 1 among val cells)
+					var valCells = col.querySelectorAll('[class*="optRecordBar-val"]')
+					console.log('Found val cells:', valCells.length)
+
+					var cellIndex = lr === 'R' ? 0 : 1
+					var cell = valCells[cellIndex]
+					if (!cell) { console.log('Cell not found'); return }
+
+					// Find the actual input element inside
+					var input = cell.querySelector('input')
+					console.log('Found input:', !!input)
+
+					if (input) {
+						// Remove all blocks
+						var uniInput = cell.querySelector('uni-input')
+						if (uniInput) {
+							uniInput.style.pointerEvents = 'auto'
+							uniInput.removeAttribute('readonly')
+							uniInput.removeAttribute('disabled')
+						}
+						input.readOnly = false
+						input.disabled = false
+						input.removeAttribute('readonly')
+						input.removeAttribute('disabled')
+						input.style.pointerEvents = 'auto'
+						// Slight delay then focus
+						setTimeout(function() {
+							input.focus()
+							// Dispatch touch event to simulate tap
+							console.log('Input focused')
+						}, 100)
+					}
+				} catch(e) {
+					console.log('Manual input error:', e)
+				}
+			}, 200)
 		},
 		opt_toggleSign(sign) {
 			if (this.optPopup.lastStr === sign) {
@@ -7408,4 +7472,18 @@ that.searchClient()
 	color: #a5a5a5;
 }
 
+
+/* disabled input 看起来正常 */
+.optRecordBar-val ::v-deep .uni-input-input:disabled {
+	color: #333 !important;
+	-webkit-text-fill-color: #333 !important;
+	opacity: 1 !important;
+	background: #fff !important;
+}
+
+
+/* input不拦截点击，让父层view捕获 */
+.optRecordBar-val uni-input {
+	pointer-events: none;
+}
 </style>
