@@ -630,147 +630,128 @@
 		<!-- ========== Add Optometry modal START ========== -->
 		<view class="addOpt-overlay" v-if="addOptShow" @click="addOptClose">
 			<view class="addOpt-modal" @click.stop="">
-				<view class="addOpt-header">
-					<text class="addOpt-title">{{ $t('measure.addOptometry') }}</text>
-					<text class="addOpt-close" @click="addOptClose">×</text>
+				<view class="MV_header">
+					<text class="MV_title">{{ addOptView.type == 'add' ? $t('measure.addOptometry') : ($t('measure.editOptometry') || '编辑验光') }}</text>
+					<view class="MV_close" @click="addOptClose">
+						<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#fff"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+					</view>
+				</view>
+				<!-- 固定顶栏：验光人员 + 时间 + 客户 -->
+				<view class="addOpt-topbar">
+					<view class="addOpt-topbar-left">
+						<text class="addOpt-label">{{ $t('measure.optometrist') }}：</text>
+						<image class="addOpt-avatar" :src="addOptView.emp.img || (loginInfo.staff && loginInfo.staff.img) || ($store.state.login && $store.state.login.staff && $store.state.login.staff.img) || '/static/personimg.jpg'" mode="aspectFill" />
+						<text class="addOpt-emp-name">{{ addOptView.emp.name || (loginInfo.staff && loginInfo.staff.name) || ($store.state.login && $store.state.login.staff && $store.state.login.staff.name) || '' }}</text>
+						<text class="addOpt-label" style="margin-left:30px">{{ $t('measure.optDate') }}：</text>
+						<view class="addOpt-date-chip" @click="addOptDatePickerShow = true">
+							<text>{{ addOptView.ygTime || $t('measure.today') }}</text>
+						</view>
+					</view>
+					<view class="addOpt-topbar-right">
+						<view class="addOpt-client-box">
+							<text v-if="!addOptView.client.id">{{ $t('measure.guest') || '游客' }}</text>
+							<view v-else style="display:flex;align-items:center;gap:4px">
+								<text>{{ $t('measure.client') }}：</text>
+								<image class="addOpt-avatar" :src="addOptView.client.img || '/static/personimg.jpg'" mode="aspectFill" />
+								<text>{{ addOptView.client.name }}</text>
+							</view>
+						</view>
+					</view>
 				</view>
 				<scroll-view scroll-y class="addOpt-body">
-					<!-- 顶部信息栏 -->
-					<view class="addOpt-topbar">
-						<view class="addOpt-topbar-row">
-							<view class="addOpt-emp-chip">
-								<text>{{ addOptView.emp.name || (loginInfo.staff && loginInfo.staff.name) || '' }}</text>
-							</view>
-							<view class="addOpt-date-chip" @click="addOptDatePickerShow = true">
-								<text>{{ addOptView.ygTime || $t('measure.today') }}</text>
+					<view class="addOptCon">
+						<!-- 验光类型 -->
+						<view class="addOpt-type-row">
+							<view class="composeBoxCss">
+								<text :class="{'active': addOptView.ygType == 'default'}" @click="opt_typeChange('default')">远用</text>
+								<text :class="{'active': addOptView.ygType == 'djd'}" @click="opt_typeChange('djd')">多焦点</text>
+								<text :class="{'active': addOptView.ygType == 'jycf'}" @click="opt_typeChange('jycf')">近用</text>
 							</view>
 						</view>
-					</view>
-					<!-- 验光类型 -->
-					<view class="addOpt-typeTabs">
-						<text class="addOpt-typeTab" :class="{'active': addOptView.ygType == 'default'}" @click="opt_typeChange('default')">{{ $t('measure.distance') }}</text>
-						<text class="addOpt-typeTab" :class="{'active': addOptView.ygType == 'djd'}" @click="opt_typeChange('djd')">{{ $t('measure.typeProgressive') }}</text>
-						<text class="addOpt-typeTab" :class="{'active': addOptView.ygType == 'jycf'}" @click="opt_typeChange('jycf')">{{ $t('measure.prescription') }}</text>
-					</view>
 
-					<!-- 验光记录列表 -->
-					<view class="optRecordBar">
-						<view class="addOpt-recordUl">
-							<view class="addOpt-recordLi" :class="{ active: addOptView.main_recordList_active === item.id }"
-								v-for="item in addOptView.main_recordList" :key="item.id"
-								@click="opt_recordList_li('main', item)">
-								<text class="addOpt-recordFont">{{ item.name || item.id }}</text>
-							</view>
-						</view>
-					</view>
 
-					<!-- 主验光数据表 -->
-					<view class="addOpt-sub-table">
-						<view class="opt-table-header" style="display:flex;padding:4px 0">
-							<text class="opt-th" style="width:40px"></text>
-							<text class="opt-th" style="flex:1;text-align:center;font-weight:bold;font-size:12px">SPH</text>
-							<text class="opt-th" style="flex:1;text-align:center;font-weight:bold;font-size:12px">CYL</text>
-							<text class="opt-th" style="flex:1;text-align:center;font-weight:bold;font-size:12px">AXI</text>
-							<text class="opt-th" style="flex:1;text-align:center;font-weight:bold;font-size:12px" v-if="addOptView.ygType == 'djd'">ADD</text>
-							<text class="opt-th" style="flex:1;text-align:center;font-weight:bold;font-size:12px">PD</text>
-							<text class="opt-th" style="flex:1;text-align:center;font-weight:bold;font-size:12px">PH</text>
+						<!-- 主验光数据表 -->
+						<view class="optRecordBar">
+							<view class="optRecordBar-li optRecordBar-li-label">
+								<view class="optRecordBar-cell optRecordBar-header"><text></text></view>
+								<view class="optRecordBar-cell optRecordBar-sub"></view>
+								<view class="optRecordBar-cell optRecordBar-val"><text>R</text></view>
+								<view class="optRecordBar-cell optRecordBar-val"><text>L</text></view>
+							</view>
+							<view class="optRecordBar-li" v-for="(col, colIdx) in addOptView.mainTab" :key="'main_'+colIdx">
+								<view class="optRecordBar-cell optRecordBar-header"><text>{{ col.tip }}</text></view>
+								<view class="optRecordBar-cell optRecordBar-sub" :class="{ red: col.red }"><text>{{ col.ms }}</text></view>
+								<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'main', colIdx, col.itemType, col.r)">
+									<input type="text" class="optRecordBar-input" :value="col.r || ''" readonly />
+								</view>
+								<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'main', colIdx, col.itemType, col.l)">
+									<input type="text" class="optRecordBar-input" :value="col.l || ''" readonly />
+								</view>
+							</view>
 						</view>
-						<view class="opt-table-row" style="display:flex;padding:4px 0" v-for="(tab, tabIdx) in addOptView.mainTab" :key="'main'+tabIdx">
-							<text style="width:40px;text-align:center;font-weight:bold;color:#6366f1">{{ tab.LR === 'R' ? 'R' : 'L' }}</text>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'main', tabIdx, 'sph', tab.sph)">
-								<text :class="{ 'addOpt-flash': tab.sph !== (addOptView.old_mainTab[tabIdx] && addOptView.old_mainTab[tabIdx].sph) }">{{ tab.sph || '-' }}</text>
-							</view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'main', tabIdx, 'cyl', tab.cyl)">
-								<text :class="{ 'addOpt-flash': tab.cyl !== (addOptView.old_mainTab[tabIdx] && addOptView.old_mainTab[tabIdx].cyl) }">{{ tab.cyl || '-' }}</text>
-							</view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'main', tabIdx, 'axi', tab.axi)">
-								<text>{{ tab.axi || '-' }}</text>
-							</view>
-							<view class="opt-input-cell" style="flex:1" v-if="addOptView.ygType == 'djd'" @click="opt_showPopup($event, 'main', tabIdx, 'add', tab.add)">
-								<text>{{ tab.add || '-' }}</text>
-							</view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'main', tabIdx, 'pd', tab.pd)">
-								<text>{{ tab.pd || '-' }}</text>
-							</view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'main', tabIdx, 'ph', tab.ph)">
-								<text>{{ tab.ph || '-' }}</text>
-							</view>
+
+						
+<!-- 备注 -->
+						<view class="addOpt-remark">
+							<text class="addOpt-label">{{ $t('measure.remark') }}：</text>
+							<input class="addOpt-remark-input" type="text" v-model="addOptView.mainKcomment" :placeholder="$t('measure.pleaseInput')" />
 						</view>
 					</view>
 
-					<!-- 原始验光 -->
-					<view class="optRecordBar" v-if="addOptView.original_recordList.length > 0">
-						<view class="optRecordBar-li-header">{{ $t('measure.originalRecord') }}</view>
-						<view class="addOpt-recordUl">
-							<view class="addOpt-recordLi" :class="{ active: addOptView.original_recordList_active === item.id }"
-								v-for="item in addOptView.original_recordList" :key="item.id"
-								@click="opt_recordList_li('original', item)">
-								<text class="addOpt-recordFont">{{ item.name || item.id }}</text>
+						<!-- 原镜 + 电脑验光 并排 -->
+						<view class="addOpt-bottom-tables">
+							<!-- 原镜 -->
+							<view class="addOpt-bottom-left">
+								<view class="AOUO_box">
+									<view class="optRecordBar">
+										<view class="optRecordBar-li optRecordBar-li-label">
+											<view class="optRecordBar-cell optRecordBar-header"><text style="color:#2196f3">原镜</text></view>
+											<view class="optRecordBar-cell optRecordBar-sub"></view>
+											<view class="optRecordBar-cell optRecordBar-val"><text>R</text></view>
+											<view class="optRecordBar-cell optRecordBar-val"><text>L</text></view>
+										</view>
+										<view class="optRecordBar-li" v-for="(col, colIdx) in addOptView.originalTab" :key="'orig_'+colIdx">
+											<view class="optRecordBar-cell optRecordBar-header"><text>{{ col.tip }}</text></view>
+											<view class="optRecordBar-cell optRecordBar-sub" :class="{ red: col.red }"><text>{{ col.ms }}</text></view>
+											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'original', colIdx, col.itemType, col.r)">
+												<input type="text" class="optRecordBar-input" :value="col.r || ''" readonly />
+											</view>
+											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'original', colIdx, col.itemType, col.l)">
+												<input type="text" class="optRecordBar-input" :value="col.l || ''" readonly />
+											</view>
+										</view>
+									</view>
+								</view>
+							</view>
+							<!-- 电脑验光 -->
+							<view class="addOpt-bottom-right">
+								<view class="AOUO_box">
+									<view class="optRecordBar">
+										<view class="optRecordBar-li optRecordBar-li-label">
+											<view class="optRecordBar-cell optRecordBar-header"><text style="color:#2196f3">电脑验光</text></view>
+											<view class="optRecordBar-cell optRecordBar-sub"></view>
+											<view class="optRecordBar-cell optRecordBar-val"><text>R</text></view>
+											<view class="optRecordBar-cell optRecordBar-val"><text>L</text></view>
+										</view>
+										<view class="optRecordBar-li" v-for="(col, colIdx) in addOptView.autoTab" :key="'auto_'+colIdx">
+											<view class="optRecordBar-cell optRecordBar-header"><text>{{ col.tip }}</text></view>
+											<view class="optRecordBar-cell optRecordBar-sub" :class="{ red: col.red }"><text>{{ col.ms }}</text></view>
+											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'auto', colIdx, col.itemType, col.r)">
+												<input type="text" class="optRecordBar-input" :value="col.r || ''" readonly />
+											</view>
+											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'auto', colIdx, col.itemType, col.l)">
+												<input type="text" class="optRecordBar-input" :value="col.l || ''" readonly />
+											</view>
+										</view>
+									</view>
+								</view>
 							</view>
 						</view>
-					</view>
-					<view class="addOpt-sub-table" v-if="addOptView.originalTab.length > 0">
-						<view style="display:flex;padding:4px 0">
-							<text style="width:40px"></text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px">SPH</text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px">CYL</text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px">AXI</text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px" v-if="addOptView.ygType == 'djd'">ADD</text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px">PD</text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px">PH</text>
-						</view>
-						<view style="display:flex;padding:4px 0" v-for="(tab, tabIdx) in addOptView.originalTab" :key="'orig'+tabIdx">
-							<text style="width:40px;text-align:center;font-weight:bold;color:#6366f1">{{ tab.LR === 'R' ? 'R' : 'L' }}</text>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'original', tabIdx, 'sph', tab.sph)"><text>{{ tab.sph || '-' }}</text></view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'original', tabIdx, 'cyl', tab.cyl)"><text>{{ tab.cyl || '-' }}</text></view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'original', tabIdx, 'axi', tab.axi)"><text>{{ tab.axi || '-' }}</text></view>
-							<view class="opt-input-cell" style="flex:1" v-if="addOptView.ygType == 'djd'" @click="opt_showPopup($event, 'original', tabIdx, 'add', tab.add)"><text>{{ tab.add || '-' }}</text></view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'original', tabIdx, 'pd', tab.pd)"><text>{{ tab.pd || '-' }}</text></view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'original', tabIdx, 'ph', tab.ph)"><text>{{ tab.ph || '-' }}</text></view>
-						</view>
-					</view>
 
-					<!-- 自动验光 -->
-					<view class="optRecordBar" v-if="addOptView.auto_recordList.length > 0">
-						<view class="optRecordBar-li-header">{{ $t('measure.autoRecord') }}</view>
-						<view class="addOpt-recordUl">
-							<view class="addOpt-recordLi" :class="{ active: addOptView.auto_recordList_active === item.id }"
-								v-for="item in addOptView.auto_recordList" :key="item.id"
-								@click="opt_recordList_li('auto', item)">
-								<text class="addOpt-recordFont">{{ item.name || item.id }}</text>
-							</view>
-						</view>
-					</view>
-					<view class="addOpt-sub-table" v-if="addOptView.autoTab.length > 0">
-						<view style="display:flex;padding:4px 0">
-							<text style="width:40px"></text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px">SPH</text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px">CYL</text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px">AXI</text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px" v-if="addOptView.ygType == 'djd'">ADD</text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px">PD</text>
-							<text style="flex:1;text-align:center;font-weight:bold;font-size:12px">PH</text>
-						</view>
-						<view style="display:flex;padding:4px 0" v-for="(tab, tabIdx) in addOptView.autoTab" :key="'auto'+tabIdx">
-							<text style="width:40px;text-align:center;font-weight:bold;color:#6366f1">{{ tab.LR === 'R' ? 'R' : 'L' }}</text>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'auto', tabIdx, 'sph', tab.sph)"><text>{{ tab.sph || '-' }}</text></view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'auto', tabIdx, 'cyl', tab.cyl)"><text>{{ tab.cyl || '-' }}</text></view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'auto', tabIdx, 'axi', tab.axi)"><text>{{ tab.axi || '-' }}</text></view>
-							<view class="opt-input-cell" style="flex:1" v-if="addOptView.ygType == 'djd'" @click="opt_showPopup($event, 'auto', tabIdx, 'add', tab.add)"><text>{{ tab.add || '-' }}</text></view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'auto', tabIdx, 'pd', tab.pd)"><text>{{ tab.pd || '-' }}</text></view>
-							<view class="opt-input-cell" style="flex:1" @click="opt_showPopup($event, 'auto', tabIdx, 'ph', tab.ph)"><text>{{ tab.ph || '-' }}</text></view>
-						</view>
-					</view>
-
-					<!-- 备注 -->
-					<view class="addOpt-remark">
-						<text class="addOpt-label">{{ $t('measure.remark') }}:</text>
-						<textarea class="addOpt-remark-input" v-model="addOptView.mainKcomment" :placeholder="$t('measure.pleaseInput')"></textarea>
-					</view>
-				</scroll-view>
+										</scroll-view>
 				<view class="addOpt-footer">
-					<view class="addOpt-btn" @click="addOptClose">{{ $t('measure.cancel') }}</view>
-					<view class="addOpt-btn addOpt-btn-primary" @click="opt_saveFun">{{ $t('measure.save') }}</view>
+					<view class="am-btn" @click="addOptClose">{{ $t('measure.cancel') }}</view>
+					<view class="am-btn am-btn-primary" @click="opt_saveFun">{{ addOptView.type == 'add' ? $t('measure.save') : ($t('measure.confirmEdit') || '确认修改') }}</view>
 				</view>
 			</view>
 		</view>
@@ -825,31 +806,7 @@
 		</view>
 
 
-		<!-- ========== 员工码弹窗 ========== -->
-		<view class="modal-overlay" v-if="empCodeShow" @click="closeEmpCode">
-			<view class="modal empCode-modal" @click.stop="">
-				<view class="empCode-header">
-					<text class="empCode-title">{{ $t('measure.staffCode') }}</text>
-					<view class="modal-close" @click="closeEmpCode">
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-					</view>
-				</view>
-				<view class="empCode-body">
-					<view class="empCode-img">
-						<image v-if="empCodeQrcode" :src="empCodeQrcode" mode="aspectFit" style="width:100%;height:100%" />
-						<text v-else style="color:#999;font-size:14px">暂无二维码</text>
-					</view>
-					<text class="empCode-name">{{ empCodeEmpName || '-' }}</text>
-					<view class="empCode-tabs">
-						<view class="composeBoxCss">
-							<text :class="{'active': empCodeType === 'gzh'}" @click="empCodeTypeChange('gzh')">公众号</text>
-							<text :class="{'active': empCodeType === 'wxy'}" @click="empCodeTypeChange('wxy')">微小易</text>
-							<text :class="{'active': empCodeType === 'qyh'}" @click="empCodeTypeChange('qyh')">企业号</text>
-						</view>
-					</view>
-				</view>
-			</view>
-		</view>
+		
 
 
 		<!-- Date Pickers -->
@@ -1725,6 +1682,16 @@ that.searchClient()
 
 			this.addOptShow = true
 
+			var that2 = this
+
+			this.$nextTick(function() {
+
+				that2.addOptView.ygType = 'default'
+
+				that2.addOptView.mainTab = that2.opt_typeChange('default')
+
+			})
+
 		},
 
 		addOptClose() {
@@ -2245,6 +2212,8 @@ that.searchClient()
 
 		opt_typeChange(command) {
 
+			this.addOptView.ygType = command
+
 			var ygTabObj = {
 
 				'default': {
@@ -2349,7 +2318,9 @@ that.searchClient()
 
 			if (!config) config = ygTabObj['default']
 
-			return this.opt_buildTabArray(config)
+			this.addOptView.mainTab = this.opt_buildTabArray(config)
+
+			return this.addOptView.mainTab
 
 		},
 
@@ -2494,24 +2465,28 @@ that.searchClient()
 		// ========== Add Optometry methods END ==========
 
 		// ========== OptInput Preset Value Picker methods START ==========
-		opt_showPopup(ygItem, lr, index, tabName, event) {
+		opt_showPopup(event, section, tabIdx, fieldKey, currentValue) {
 			var rect
 			try {
-				var el = event.currentTarget || event.target
+				var el = event && (event.currentTarget || event.target)
 				if (el && el.getBoundingClientRect) {
 					rect = el.getBoundingClientRect()
 				} else {
-					rect = { bottom: event.touches ? event.touches[0].clientY : (event.clientY || 200), left: event.touches ? event.touches[0].clientX : (event.clientX || 100) }
+					rect = { bottom: 200, left: 100 }
 				}
 			} catch(e) {
-				rect = { bottom: event.clientY || 200, left: event.clientX || 100 }
+				rect = { bottom: 200, left: 100 }
 			}
-			var type = ygItem.itemType
+			// Determine itemType based on fieldKey
+			var signFields = ["sph", "cyl", "add"]
+			var type = signFields.indexOf(fieldKey) > -1 ? "sign" : "number"
 			var popup = this.optPopup
 			popup.itemType = type
-			popup.LR = lr
-			popup.tabName = tabName
-			popup.index = index
+			popup.LR = tabIdx === 0 ? 'R' : 'L'
+			popup.tabName = fieldKey.toUpperCase()
+			popup.index = tabIdx
+			popup.section = section
+			popup.fieldKey = fieldKey
 			popup.mode = 'preset'
 			popup.lastStr = ''
 
@@ -2732,10 +2707,16 @@ that.searchClient()
 			return list
 		},
 		opt_selectPreset(value) {
-			if (!value && value !== '0' && value !== 0) return // skip empty cells
+			if (!value && value !== '0' && value !== 0) return
 			var popup = this.optPopup
-			var finalValue = value + popup.lastStr
-			this.addOptView[popup.tabName][popup.index][popup.LR] = finalValue
+			var finalValue = (popup.lastStr || '') + value
+			var section = popup.section || 'main'
+			var tabKey = section === 'main' ? 'mainTab' : section === 'original' ? 'originalTab' : 'autoTab'
+			var col = this.addOptView[tabKey][popup.index]
+			if (col) {
+				if (popup.LR === 'R') col.r = finalValue
+				else col.l = finalValue
+			}
 			this.opt_closePopup()
 		},
 		opt_closePopup() {
@@ -4989,18 +4970,6 @@ that.searchClient()
 .opt-input-cell {
 	height: 25px;
 }
-.optRecordBar-li input {
-	border: none;
-	border-radius: 5px;
-	padding: 2px 3px;
-	text-align: center;
-	width: 100%;
-	display: block;
-	box-sizing: border-box;
-	background: transparent;
-	font-size: 13px;
-	height: 25px;
-}
 .addOpt-red {
 	color: #e53935;
 }
@@ -5325,7 +5294,7 @@ that.searchClient()
 .device-card-check {
 	color: #6366f1;
 	font-size: 16px;
-	font-weight: bold;
+	font-weight: normal;
 	margin-left: auto;
 	flex-shrink: 0;
 }
@@ -7057,24 +7026,6 @@ that.searchClient()
 	color: #e53935;
 
 }
-.optRecordBar {
-	display: inline-block;
-	background: transparent;
-	border: 1px solid #e2e8f0;
-	border-radius: 5px;
-	padding: 3px 5px 5px 5px;
-}
-.optRecordBar-li {
-	display: inline-block;
-	width: 60px;
-	text-align: center;
-	box-sizing: border-box;
-	padding: 0 3px;
-	vertical-align: top;
-}
-.optRecordBar-li-header {
-	width: 20px;
-}
 .am-detail-img-label {
 
 	position: absolute;
@@ -7194,5 +7145,286 @@ that.searchClient()
 .AAM_ul_row1 .AAM_ul_item:last-child {
 	margin-left: auto;
 }
-</style>
 
+/* ========== 新增验光弹窗 - 匹配原项目 ========== */
+.addOpt-overlay {
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 4000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.addOpt-modal {
+	background: #fff;
+	border-radius: 14px;
+	width: 1010px;
+	max-width: 96vw;
+	max-height: 90vh;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+	overflow: hidden;
+}
+.addOpt-topbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 20px;
+	border-bottom: 1px solid #f0f0f0;
+	background: #fff;
+	flex-shrink: 0;
+}
+.addOpt-topbar-left {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+.addOpt-topbar-right {
+	display: flex;
+	align-items: center;
+}
+.addOpt-avatar {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+.addOpt-emp-name {
+	padding: 2px 12px;
+	border: 1px solid #dcdfe6;
+	border-radius: 4px;
+	font-size: 13px;
+	color: #606266;
+	background: #fff;
+}
+.addOpt-label {
+	font-size: 13px;
+	color: #606266;
+	line-height: 32px;
+}
+.addOpt-date-chip {
+	padding: 4px 12px;
+	border: 1px solid #dcdfe6;
+	border-radius: 4px;
+	font-size: 13px;
+	color: #606266;
+	background: #fff;
+	cursor: pointer;
+}
+.addOpt-client-box {
+	background: transparent;
+	padding: 3px 10px;
+	border-radius: 5px;
+	font-size: 13px;
+	line-height: 28px;
+	color: #666;
+}
+.addOpt-body {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: auto;
+	max-height: calc(90vh - 180px);
+	width: 100%;
+	box-sizing: border-box;
+}
+.addOptCon {
+	padding: 5px 20px 20px;
+	color: #000;
+}
+.addOpt-type-row {
+	margin-bottom: 10px;
+}
+.addOpt-record-section {
+	margin-bottom: 5px;
+}
+/* 记录列表 - 匹配原项目 */
+.AOUO_recordUl {
+	overflow: hidden;
+	margin-bottom: 5px;
+}
+.AOUO_li_font {
+	float: left;
+	padding: 0;
+	margin: 5px 3px 3px 0;
+	font-size: 13px;
+	user-select: none;
+}
+.AOUO_recordLi {
+	float: left;
+	padding: 0 12px;
+	margin: 5px 3px 3px 0;
+	border-radius: 100px;
+	color: #909090;
+	background: #f1f1f1;
+	cursor: pointer;
+	user-select: none;
+	font-size: 13px;
+}
+.AOUO_recordLi:active {
+	color: #fff;
+	background: #a1a1a1;
+}
+.AOUO_recordLi.active {
+	color: #fff;
+	background: #4cae4c;
+}
+/* 闪动动画 */
+.flashCss {
+	animation: flashAnim 1s ease infinite;
+}
+@keyframes flashAnim {
+	0% { border-color: #fd7634 !important; }
+	100% { border-color: #ddd !important; }
+}
+/* 原镜+电脑验光 并排 */
+.addOpt-bottom-tables {
+	display: flex;
+	gap: 20px;
+	margin-top: 15px;
+}
+.addOpt-bottom-left {
+	width: 45%;
+}
+.addOpt-bottom-right {
+	flex: 1;
+}
+/* 备注 */
+.addOpt-remark {
+	margin-top: 15px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.addOpt-remark-input {
+	flex: 1;
+	max-width: 500px;
+	height: 32px;
+	border: 1px solid #dcdfe6;
+	border-radius: 4px;
+	padding: 0 10px;
+	font-size: 13px;
+}
+/* 底部按钮 */
+.addOpt-footer {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+	padding: 12px 20px;
+	border-top: 1px solid #f0f0f0;
+	flex-shrink: 0;
+}
+@media (max-width: 767px) {
+	.addOpt-bottom-tables { flex-direction: column; }
+	.addOpt-bottom-left { width: 100%; }
+	.addOpt-topbar { flex-direction: column; gap: 8px; }
+}
+
+/* R/L label row - no input border */
+
+.AOUO_box {
+	background: transparent;
+	display: inline-block;
+	border-radius: 5px;
+	padding: 3px 5px 5px 5px;
+}
+
+/* 验光输入框 - 匹配原项目 el-input */
+
+
+
+
+
+
+/* label列的R/L文字不需要input样式 */
+/* input样式 - 去掉外层边框，只给最内层input加 */
+
+
+
+/* label列的R/L文字不需要input样式 */
+/* input样式 - 去掉外层边框，只给最内层input加 */
+
+
+
+/* ========== 验光数据表 ========== */
+.optRecordBar {
+	margin-top: 10px;
+	display: inline-flex;
+}
+.optRecordBar-li {
+	display: inline-block;
+	width: 60px;
+	text-align: center;
+	box-sizing: border-box;
+	padding: 0 3px;
+}
+.optRecordBar-li-label {
+	width: 50px;
+	padding-left: 0;
+}
+.optRecordBar-cell {
+	position: relative;
+	padding: 2px 0;
+	font-size: 13px;
+}
+.optRecordBar-header {
+	font-size: 12px;
+	color: #333;
+	min-height: 18px;
+}
+.optRecordBar-sub {
+	line-height: 10px;
+	min-height: 16px;
+	font-size: 12px;
+	color: #999;
+}
+.optRecordBar-sub.red text {
+	color: #ef4444;
+}
+.optRecordBar-val {
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+/* label列的R/L文字不需要input样式 */
+.optRecordBar-li-label .optRecordBar-val text {
+	border: none;
+	background: transparent;
+	font-weight: normal;
+	color: #333;
+}
+/* input样式 - 去掉外层边框，只给最内层input加 */
+.optRecordBar-input {
+	border: none !important;
+	background: transparent !important;
+	width: 100% !important;
+	height: 100% !important;
+	padding: 0 !important;
+}
+.optRecordBar-val ::v-deep uni-input {
+	border: none !important;
+	background: transparent !important;
+	width: 54px !important;
+	height: 25px !important;
+}
+.optRecordBar-val ::v-deep .uni-input-wrapper {
+	border: none !important;
+	background: transparent !important;
+	width: 100% !important;
+	height: 100% !important;
+}
+.optRecordBar-val ::v-deep .uni-input-input {
+	border: 1px solid #d0d7de !important;
+	border-radius: 4px !important;
+	background: #fff !important;
+	text-align: center !important;
+	font-size: 13px !important;
+	height: 23px !important;
+	width: 52px !important;
+	box-sizing: border-box !important;
+	padding: 0 2px !important;
+}
+
+</style>
