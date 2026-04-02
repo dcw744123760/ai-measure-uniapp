@@ -272,6 +272,7 @@
 								@confirm="searchClient" />
 						</view>
 						<view class="am-btn am-btn-primary" @click="searchClient">{{ $t('measure.search') }}</view>
+						<view class="am-btn am-btn-success" @click="openEmpCode">{{ $t('measure.staffCode') }}</view>
 						<view class="am-btn am-btn-success" @click="openAddClient">{{ $t('measure.addClient') }}</view>
 					</view>
 				</view>
@@ -605,12 +606,16 @@
 						<view class="AAM_ul">
 							<view class="AAM_ul_li" v-for="(item, idx) in filteredYgList" :key="item.optId || idx"
 								@click="selectYgItem(item)">
-								<view class="AAM_ul_item" style="width:130px"><text>ID：{{ item.id }}</text></view>
-								<view class="AAM_ul_item" style="width:100px"><text>类型：{{ item.checkText == '标准' ? '远用' : item.checkText }}</text></view>
-								<view class="AAM_ul_item" style="width:160px"><text>远瞳距R/L：{{ (item.rspace||'') + '/' + (item.lspace||'') }}</text></view>
-								<view class="AAM_ul_item" style="width:350px"><text>规格R/L：{{ (item.rSpecs||'') + '/' + (item.lSpecs||'') }}</text></view>
-								<view class="AAM_ul_item" style="width:85px"><text>瞳高：{{ rlHspaceFun(item.rhspace, item.lhspace) }}</text></view>
-								<view class="AAM_ul_item" style="width:80px"><text :class="item.aiImage == null ? 'ai-tag-unbound' : 'ai-tag-bound'">{{ item.aiImage == null ? '未绑定Ai' : '已绑定Ai' }}</text></view>
+								<view class="AAM_ul_row1">
+									<view class="AAM_ul_item" style="width:130px"><text>ID：{{ item.id }}</text></view>
+									<view class="AAM_ul_item" style="width:100px"><text>类型：{{ item.checkText == '标准' ? '远用' : item.checkText }}</text></view>
+									<view class="AAM_ul_item" style="width:160px"><text>远瞳距R/L：{{ (item.rspace||'') + '/' + (item.lspace||'') }}</text></view>
+									<view class="AAM_ul_item" style="width:85px"><text>瞳高：{{ rlHspaceFun(item.rhspace, item.lhspace) }}</text></view>
+									<view class="AAM_ul_item" style="width:80px"><text :class="item.aiImage == null ? 'ai-tag-unbound' : 'ai-tag-bound'">{{ item.aiImage == null ? '未绑定Ai' : '已绑定Ai' }}</text></view>
+								</view>
+								<view class="AAM_ul_row2">
+									<view class="AAM_ul_item" style="width:100%"><text>规格R/L：{{ (item.rSpecs||'') + '/' + (item.lSpecs||'') }}</text></view>
+								</view>
 							</view>
 						</view>
 						<view v-if="!selectYgLoading && filteredYgList.length === 0" class="am-empty">
@@ -7171,6 +7176,23 @@ that.searchClient()
 /* uni-datetime-picker 内边距 */
 .am-filter-group ::v-deep .uni-date-x {
 	padding: 0 10px;
+}
+
+.AAM_ul_row1 {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2px;
+	margin-bottom: 6px;
+}
+.AAM_ul_row2 {
+	display: flex;
+}
+
+.AAM_ul_row1 {
+	justify-content: flex-start;
+}
+.AAM_ul_row1 .AAM_ul_item:last-child {
+	margin-left: auto;
 }
 </style>
 
