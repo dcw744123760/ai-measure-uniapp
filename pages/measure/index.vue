@@ -681,10 +681,10 @@
 							<view class="optRecordBar-li" v-for="(col, colIdx) in addOptView.mainTab" :key="'main_'+colIdx">
 								<view class="optRecordBar-cell optRecordBar-header"><text>{{ col.tip }}</text></view>
 								<view class="optRecordBar-cell optRecordBar-sub" :class="{ red: col.red }"><text>{{ col.ms }}</text></view>
-								<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'main', colIdx, col.itemType, col.r)">
+								<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'main', colIdx, col.itemType, col.r, 'R')">
 									<input type="text" class="optRecordBar-input" :value="col.r || ''" readonly />
 								</view>
-								<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'main', colIdx, col.itemType, col.l)">
+								<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'main', colIdx, col.itemType, col.l, 'L')">
 									<input type="text" class="optRecordBar-input" :value="col.l || ''" readonly />
 								</view>
 							</view>
@@ -713,10 +713,10 @@
 										<view class="optRecordBar-li" v-for="(col, colIdx) in addOptView.originalTab" :key="'orig_'+colIdx">
 											<view class="optRecordBar-cell optRecordBar-header"><text>{{ col.tip }}</text></view>
 											<view class="optRecordBar-cell optRecordBar-sub" :class="{ red: col.red }"><text>{{ col.ms }}</text></view>
-											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'original', colIdx, col.itemType, col.r)">
+											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'original', colIdx, col.itemType, col.r, 'R')">
 												<input type="text" class="optRecordBar-input" :value="col.r || ''" readonly />
 											</view>
-											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'original', colIdx, col.itemType, col.l)">
+											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'original', colIdx, col.itemType, col.l, 'L')">
 												<input type="text" class="optRecordBar-input" :value="col.l || ''" readonly />
 											</view>
 										</view>
@@ -736,10 +736,10 @@
 										<view class="optRecordBar-li" v-for="(col, colIdx) in addOptView.autoTab" :key="'auto_'+colIdx">
 											<view class="optRecordBar-cell optRecordBar-header"><text>{{ col.tip }}</text></view>
 											<view class="optRecordBar-cell optRecordBar-sub" :class="{ red: col.red }"><text>{{ col.ms }}</text></view>
-											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'auto', colIdx, col.itemType, col.r)">
+											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'auto', colIdx, col.itemType, col.r, 'R')">
 												<input type="text" class="optRecordBar-input" :value="col.r || ''" readonly />
 											</view>
-											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'auto', colIdx, col.itemType, col.l)">
+											<view class="optRecordBar-cell optRecordBar-val" @click="opt_showPopup($event, 'auto', colIdx, col.itemType, col.l, 'L')">
 												<input type="text" class="optRecordBar-input" :value="col.l || ''" readonly />
 											</view>
 										</view>
@@ -759,24 +759,23 @@
 
 
 		<!-- OptInput 预选值弹窗 -->
-		<view class="ygSetBox" v-if="optPopup.show" :style="{ left: optPopup.x + 'px', top: optPopup.y + 'px' }">
-			<view class="ygSetInfo">
-				<text>{{ optPopup.tabName }}</text>
-			</view>
-			<view class="ygSetTj">
-				<text v-if="optPopup.itemType == 'sign' || optPopup.itemType == 'check'" class="ygSetTj-btn ygSetTj-font" :class="{ 'ygSetTj-active': optPopup.lastStr === '+' }" @click="opt_toggleSign('+')">+</text>
-				<text v-if="optPopup.itemType == 'sign' || optPopup.itemType == 'check'" class="ygSetTj-btn ygSetTj-font" :class="{ 'ygSetTj-active': optPopup.lastStr === '-' }" @click="opt_toggleSign('-')">-</text>
-			</view>
-			<view :class="optPopup.list.length === 2 ? 'ygSetUl ygSetUl-twoRow' : 'ygSetUl'" v-if="optPopup.mode !== 'manual'">
-				<view class="ygSetUl-li" v-for="(ygli, liIdx) in optPopup.list" :key="'pl'+liIdx">
-					<text class="ygSetUl-td" :class="{ 'ygSetUl-oldValue': !!ygli.gray }"
-						v-for="(ygtd, tdIdx) in ygli.td" :key="'pt'+tdIdx"
-						@click="opt_selectPreset(ygtd)">{{ ygtd }}</text>
+		<view class="ygSetBox" v-if="optPopup.show" @click="opt_closePopup">
+			<view class="ygSetInfo" :style="{ top: optPopup.y + 'px', left: optPopup.x + 'px' }" @click.stop="">
+				<view class="ygSetTj">
+					<text class="ygSetTj-span" @click="opt_manualInput">手动输入</text>
+					<text class="ygSetTj-span" @click="opt_manualInput">虚拟键盘</text>
+					<text v-if="optPopup.itemType == 'sign' || optPopup.itemType == 'check'" class="ygSetTj-font" :class="{ active: optPopup.lastStr === '+' }" @click="opt_toggleSign('+')">+</text>
+					<text v-if="optPopup.itemType == 'sign' || optPopup.itemType == 'check'" class="ygSetTj-font" :class="{ active: optPopup.lastStr === '-' }" @click="opt_toggleSign('-')">-</text>
+				</view>
+				<view :class="optPopup.list.length === 2 ? 'ygSetUl twoRow' : 'ygSetUl'" v-if="optPopup.mode !== 'manual'">
+					<view class="ygSetUl-li" v-for="(ygli, liIdx) in optPopup.list" :key="'pl'+liIdx">
+						<text class="ygSetUl-td" :class="{ 'oldValue': !!ygli.gray }"
+							v-for="(ygtd, tdIdx) in ygli.td" :key="'pt'+tdIdx"
+							@click="opt_selectPreset(ygtd)">{{ ygtd }}</text>
+					</view>
 				</view>
 			</view>
 		</view>
-		<!-- OptInput 遮罩 -->
-		<view class="ygSetBg" v-if="optPopup.show" @click="opt_closePopup"></view>
 
 
 		<!-- ========== 员工码弹窗 ========== -->
@@ -2306,7 +2305,7 @@ that.searchClient()
 
 				'auto': {
 
-					itemList: ['ball', 'pole', 'axes', 'space', 'ker', 'kery', 'kera', 'OpticAxis'],
+					itemList: ['ball', 'pole', 'axes', 'space', 'ker', 'kery', 'kera'],
 
 					red: []
 
@@ -2465,14 +2464,18 @@ that.searchClient()
 		// ========== Add Optometry methods END ==========
 
 		// ========== OptInput Preset Value Picker methods START ==========
-		opt_showPopup(event, section, tabIdx, fieldKey, currentValue) {
+		opt_showPopup(event, section, tabIdx, fieldKey, currentValue, lr) {
 			var rect
 			try {
 				var el = event && (event.currentTarget || event.target)
 				if (el && el.getBoundingClientRect) {
 					rect = el.getBoundingClientRect()
+				} else if (event && event.detail) {
+					rect = { bottom: (event.detail.y || event.clientY || 200) + 5, left: event.detail.x || event.clientX || 100, top: event.detail.y || event.clientY || 200 }
+				} else if (event && event.touches && event.touches[0]) {
+					rect = { bottom: event.touches[0].clientY + 5, left: event.touches[0].clientX, top: event.touches[0].clientY }
 				} else {
-					rect = { bottom: 200, left: 100 }
+					rect = { bottom: 200, left: 100, top: 200 }
 				}
 			} catch(e) {
 				rect = { bottom: 200, left: 100 }
@@ -2482,7 +2485,7 @@ that.searchClient()
 			var type = signFields.indexOf(fieldKey) > -1 ? "sign" : "number"
 			var popup = this.optPopup
 			popup.itemType = type
-			popup.LR = tabIdx === 0 ? 'R' : 'L'
+			popup.LR = lr || 'R'
 			popup.tabName = fieldKey.toUpperCase()
 			popup.index = tabIdx
 			popup.section = section
@@ -2491,7 +2494,7 @@ that.searchClient()
 			popup.lastStr = ''
 
 			// Build preset list based on itemType
-			var list = this.opt_getPresetList(type)
+			var list = this.opt_getPresetList(fieldKey)
 			popup.list = list
 
 			// Position: below and to the right of the input
@@ -5097,117 +5100,6 @@ that.searchClient()
 
 /* ========== OptInput Preset Value Picker styles ========== */
 /* 验光预选值弹窗 - 原版样式 */
-.ygSetBox {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background: rgba(0,0,0,0);
-	overflow: auto;
-	z-index: 9999;
-}
-.ygSetBg {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100vh;
-}
-.ygSetInfo {
-	position: absolute;
-	border-radius: 5px;
-}
-.ygSetTj {
-	text-align: center;
-	padding: 5px 5px;
-	border: 1px solid #09f;
-	box-sizing: border-box;
-	margin-left: -1px;
-	background: #fff;
-}
-.ygSetTj text {
-	display: inline-block;
-	color: #fff;
-	padding: 4px 10px;
-	background: #795548;
-	font-size: 12px;
-	border-radius: 5px;
-	cursor: pointer;
-	margin: 0 5px;
-}
-.ygSetTj .font {
-	display: inline-block;
-	width: 35px;
-	box-sizing: border-box;
-	text-align: center;
-	color: #000;
-	background: #f0f0f0;
-	font-size: 12px;
-	border-radius: 5px;
-	cursor: pointer;
-	margin: 0 5px;
-	padding: 4px 10px;
-}
-.ygSetTj .font.active {
-	color: #fff;
-	background: #4caf50;
-}
-.ygSetUl {
-	zoom: 1;
-	background: #fff;
-	margin-bottom: 20px;
-}
-.ygSetUl:after {
-	content: '';
-	display: block;
-	clear: both;
-}
-.ygSetUl-li {
-	float: left;
-	width: 70px;
-	margin-right: -1px;
-}
-.ygSetUl-td {
-	float: left;
-	display: inline-block;
-	width: 70px;
-	height: 25px;
-	line-height: 25px;
-	font-size: 12px;
-	text-align: center;
-	border: 1px solid #09f;
-	border-bottom: 0;
-	border-right: 0;
-	cursor: pointer;
-	margin: -1px 0 0 -1px;
-	box-sizing: border-box;
-}
-.ygSetUl-li:last-child .ygSetUl-td {
-	border-right: 1px solid #09f;
-}
-.ygSetUl-li .ygSetUl-td:last-child {
-	border-bottom: 1px solid #09f;
-}
-.ygSetUl-td:active {
-	color: red !important;
-}
-.ygSetUl-oldValue {
-	color: #a5a5a5;
-}
-.ygSetBox::-webkit-scrollbar {
-	width: 6px;
-	height: 6px;
-}
-.ygSetBox::-webkit-scrollbar-thumb {
-	background-color: #c2c2c2;
-	background-clip: padding-box;
-	min-height: 28px;
-	border-radius: 100px;
-}
-.ygSetBox::-webkit-scrollbar-track-piece {
-	background-color: rgba(0,0,0,0);
-}
 
 /* Loading spinner */
 .am-loading-spinner {
@@ -7425,6 +7317,95 @@ that.searchClient()
 	width: 52px !important;
 	box-sizing: border-box !important;
 	padding: 0 2px !important;
+}
+
+
+
+/* ========== 验光预选值弹窗 - 匹配原项目 ========== */
+.ygSetBox {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0,0,0,0);
+	z-index: 9999;
+	overflow: auto;
+}
+.ygSetInfo {
+	position: absolute;
+	border-radius: 5px;
+}
+.ygSetTj {
+	text-align: center;
+	padding: 5px 5px;
+	border: 1px solid #09f;
+	box-sizing: border-box;
+	margin-left: -1px;
+	background: #fff;
+}
+.ygSetTj-span {
+	display: inline-block;
+	color: #fff;
+	padding: 4px 10px;
+	background: #795548;
+	font-size: 12px;
+	border-radius: 5px;
+	cursor: pointer;
+	margin: 0 5px;
+}
+.ygSetTj-font {
+	display: inline-block;
+	width: 35px;
+	box-sizing: border-box;
+	text-align: center;
+	color: #000;
+	padding: 4px 10px;
+	background: #f0f0f0;
+	font-size: 12px;
+	border-radius: 5px;
+	cursor: pointer;
+	margin: 0 5px;
+}
+.ygSetTj-font.active {
+	color: #fff;
+	background: #4caf50;
+}
+.ygSetUl {
+	background: #fff;
+	margin-bottom: 20px;
+	display: flex;
+}
+.ygSetUl-li {
+	width: 70px;
+	margin-right: -1px;
+}
+.ygSetUl-td {
+	display: block;
+	width: 70px;
+	height: 25px;
+	line-height: 25px;
+	font-size: 12px;
+	text-align: center;
+	border: 1px solid #09f;
+	border-bottom: 0;
+	border-right: 0;
+	cursor: pointer;
+	margin: -1px 0 0 -1px;
+	box-sizing: border-box;
+}
+.ygSetUl-li:last-child .ygSetUl-td {
+	border-right: 1px solid #09f;
+}
+.ygSetUl-li .ygSetUl-td:last-child {
+	border-bottom: 1px solid #09f;
+}
+.ygSetUl.twoRow .ygSetUl-li,
+.ygSetUl.twoRow .ygSetUl-td {
+	width: 87px;
+}
+.oldValue {
+	color: #a5a5a5;
 }
 
 </style>
