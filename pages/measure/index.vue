@@ -641,7 +641,7 @@
 					<view class="addOpt-topbar-left">
 						<text class="addOpt-label">{{ $t('measure.optometrist') }}：</text>
 						<image class="addOpt-avatar" :src="addOptView.emp.img || (loginInfo.staff && loginInfo.staff.img) || ($store.state.login && $store.state.login.staff && $store.state.login.staff.img) || '/static/personimg.jpg'" mode="aspectFill" />
-						<text class="addOpt-emp-name">{{ addOptView.emp.name || (loginInfo.staff && loginInfo.staff.name) || ($store.state.login && $store.state.login.staff && $store.state.login.staff.name) || '' }}</text>
+						<text class="addOpt-emp-name" @click="openEmpSelect">{{ addOptView.emp.name || (loginInfo.staff && loginInfo.staff.name) || ($store.state.login && $store.state.login.staff && $store.state.login.staff.name) || '' }}</text>
 						<text class="addOpt-label" style="margin-left:30px">{{ $t('measure.optDate') }}：</text>
 						<view class="addOpt-date-chip" @click="addOptDatePickerShow = true">
 							<text>{{ addOptView.ygTime || $t('measure.today') }}</text>
@@ -850,6 +850,40 @@
 						<text style="font-size:20px;color:#fff">×</text>
 					</view>
 				</view>
+			</view>
+		</view>
+
+
+		<!-- 验光员选择弹窗 -->
+		<view class="empSelect-overlay" v-if="empSelectShow" @click="empSelectShow = false">
+			<view class="aam-modal" style="width:600px;max-width:95vw" @click.stop="">
+				<view class="MV_header">
+					<text class="MV_title">选择验光员</text>
+					<view class="MV_close" @click="empSelectShow = false">
+						<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#fff"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+					</view>
+				</view>
+				<view style="padding:15px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px">
+					<view class="composeBoxCss">
+						<text :class="{'active': empSelectType === '1'}" @click="empSelectType = '1'; loadEmpList()">本店</text>
+						<text :class="{'active': empSelectType === '0'}" @click="empSelectType = '0'; loadEmpList()">外借</text>
+					</view>
+					<input style="flex:1;height:32px;border:1px solid #dcdfe6;border-radius:4px;padding:0 10px;font-size:13px" type="text" v-model="empSelectKeyword" placeholder="搜索" />
+					<view class="am-btn am-btn-primary" @click="filterEmpList">搜索</view>
+				</view>
+				<scroll-view scroll-y style="max-height:50vh;padding:15px 20px">
+					<view class="empSelectUl">
+						<view class="empSelectLi" v-for="(item, idx) in empSelectList" :key="item[0] || idx"
+							v-if="empSelectHideArr.indexOf(item[0]) === -1"
+							@click="selectEmp(item)">
+							<image class="empSelectImg" :src="item[2] || '/static/personimg.jpg'" mode="aspectFill" />
+							<text style="margin-top:5px;font-size:13px">{{ item[1] }}</text>
+						</view>
+					</view>
+					<view v-if="empSelectList.length === 0" class="am-empty">
+						<text class="am-empty-text">暂无数据</text>
+					</view>
+				</scroll-view>
 			</view>
 		</view>
 
@@ -1084,6 +1118,13 @@ export default {
 			numKeySection: '',
 			numKeyIndex: -1,
 			numKeyLR: '',
+
+			// 验光员选择弹窗
+			empSelectShow: false,
+			empSelectType: '1',
+			empSelectKeyword: '',
+			empSelectList: [],
+			empSelectHideArr: [],
 
 			addOptView: {
 
@@ -2936,6 +2977,51 @@ that.searchClient()
 			// Switch back to preset selection mode
 			this.numKeyShow = false
 			this.optPopup.show = true
+		},
+
+
+		openEmpSelect() {
+			this.empSelectShow = true
+			this.empSelectKeyword = ''
+			this.empSelectHideArr = []
+			this.loadEmpList()
+		},
+
+		loadEmpList() {
+			var that = this
+			var url = '/frntend/createorder/validationUnitBuyService.json'
+			var params = { saleType: '1', searchType: this.empSelectType }
+			getData(url, params).then(function(res) {
+				var data = (res.data && res.data.data) || res.data || []
+				that.empSelectList = Array.isArray(data) ? data : []
+			}).catch(function() {
+				that.empSelectList = []
+			})
+		},
+
+		filterEmpList() {
+			var keyword = this.empSelectKeyword.trim()
+			if (!keyword) {
+				this.empSelectHideArr = []
+				return
+			}
+			var hideArr = []
+			for (var i = 0; i < this.empSelectList.length; i++) {
+				var item = this.empSelectList[i]
+				if (item[1] && item[1].indexOf(keyword) === -1) {
+					hideArr.push(item[0])
+				}
+			}
+			this.empSelectHideArr = hideArr
+		},
+
+		selectEmp(item) {
+			this.addOptView.emp = {
+				id: item[0] + '',
+				name: item[1],
+				img: item[2] || ''
+			}
+			this.empSelectShow = false
 		},
 
 
@@ -7744,5 +7830,41 @@ that.searchClient()
 	top: 0; left: 0;
 	width: 100%; height: 100%;
 	background: rgba(0,0,0,0);
+}
+
+/* 验光员选择列表 */
+.empSelectUl {
+	display: flex;
+	justify-content: flex-start;
+	flex-wrap: wrap;
+	gap: 5%;
+}
+.empSelectLi {
+	padding: 8px;
+	border-radius: 5px;
+	text-align: center;
+	margin: 5px 0;
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+.empSelectLi:active {
+	background: #f1f1f1;
+}
+.empSelectImg {
+	width: 70px;
+	height: 70px;
+	border-radius: 50%;
+}
+
+.empSelect-overlay {
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: rgba(0,0,0,0.45);
+	z-index: 50000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 </style>
