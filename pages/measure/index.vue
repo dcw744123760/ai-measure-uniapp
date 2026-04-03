@@ -759,11 +759,13 @@
 
 
 		<!-- OptInput 预选值弹窗 -->
-		<view class="ygSetBox" v-if="optPopup.show" @click="opt_closePopup">
-			<view class="ygSetInfo" :style="{ top: optPopup.y + 'px', left: optPopup.x + 'px' }" @click.stop="">
+		<view class="ygSetBox" v-if="optPopup.show">
+			<view class="ygSetBg2" @click="opt_closePopup"></view>
+			<view class="ygSetBg2" @click="opt_closePopup"></view>
+			<view class="ygSetInfo" :style="{ top: optPopup.y + 'px', left: optPopup.x + 'px' }">
 				<view class="ygSetTj">
 					<text class="ygSetTj-span" @click="opt_manualInput">手动输入</text>
-					<text class="ygSetTj-span" @click="opt_manualInput">虚拟键盘</text>
+					<text class="ygSetTj-span" @click="opt_openNumKey">虚拟键盘</text>
 					<text v-if="optPopup.itemType == 'sign' || optPopup.itemType == 'check'" class="ygSetTj-font" :class="{ active: optPopup.lastStr === '+' }" @click="opt_toggleSign('+')">+</text>
 					<text v-if="optPopup.itemType == 'sign' || optPopup.itemType == 'check'" class="ygSetTj-font" :class="{ active: optPopup.lastStr === '-' }" @click="opt_toggleSign('-')">-</text>
 				</view>
@@ -806,6 +808,50 @@
 
 
 		
+
+
+		<!-- 虚拟键盘弹窗 -->
+		<view class="numKeyBox" v-if="numKeyShow">
+			<view class="NK_bg" @click="numKeyShow = false"></view>
+			<view class="NK_mainCon" :style="{ top: numKeyTop + 'px' }">
+				<view class="NK_main">
+					<view class="NK_top">
+						<text class="NK_plusCut">{{ numKeyPlusCut }}</text>
+						<text class="NK_number">{{ numKeyNum }}</text>
+					</view>
+					<view class="NK_plusMinus">
+						<text @click="nk_plusCut('-')">-</text>
+						<text @click="nk_plusCut('+')">+</text>
+					</view>
+					<text class="NK_selectMode" @click="nk_selectMode">选择模式</text>
+					<view class="NK_info">
+						<view class="NK_info_ul">
+							<text @click="nk_key('1')">1</text>
+							<text @click="nk_key('2')">2</text>
+							<text @click="nk_key('3')">3</text>
+							<text @click="nk_key('.00')">.00</text>
+							<text @click="nk_clear">清空</text>
+							<text @click="nk_key('4')">4</text>
+							<text @click="nk_key('5')">5</text>
+							<text @click="nk_key('6')">6</text>
+							<text @click="nk_key('.25')">.25</text>
+							<text @click="nk_back">退格</text>
+							<text @click="nk_key('7')">7</text>
+							<text @click="nk_key('8')">8</text>
+							<text @click="nk_key('9')">9</text>
+							<text @click="nk_key('.50')">.50</text>
+							<text @click="nk_key('.')">.</text>
+							<text class="NK_colspan_3" @click="nk_key('0')">0</text>
+							<text @click="nk_key('.75')">.75</text>
+							<text class="NK_yes" @click="nk_yes">确认</text>
+						</view>
+					</view>
+					<view class="NK_close" @click="numKeyShow = false">
+						<text style="font-size:20px;color:#fff">×</text>
+					</view>
+				</view>
+			</view>
+		</view>
 
 
 		<!-- Date Pickers -->
@@ -1030,6 +1076,15 @@ export default {
 				manualInputActive: false
 			},
 
+			// 虚拟键盘
+			numKeyShow: false,
+			numKeyTop: 300,
+			numKeyPlusCut: '',
+			numKeyNum: '',
+			numKeySection: '',
+			numKeyIndex: -1,
+			numKeyLR: '',
+
 			addOptView: {
 
 				emp: { id: '', name: '', img: '' },
@@ -1208,8 +1263,7 @@ export default {
 
 			var empId = (this.loginInfo.staff && this.loginInfo.staff.id) || (this.$store.state.login && this.$store.state.login.staff && this.$store.state.login.staff.id) || ''
 
-			console.log('empCode empId:', empId, 'loginInfo:', JSON.stringify(this.loginInfo))
-
+			
 			if (empId) { this.getEmpQrCode(empId) } else { uni.showToast({ title: '未获取到员工ID', icon: 'none' }) }
 
 		},
@@ -2742,32 +2796,28 @@ that.searchClient()
 				try {
 					// uni-app compiles to uni-view, find by class
 					var allTables = document.querySelectorAll('.addOptCon .optRecordBar')
-					console.log('Found tables:', allTables.length, 'looking for section:', section, 'col:', colIdx, 'lr:', lr)
-
+					
 					var tableIdx = section === 'main' ? 0 : section === 'original' ? 1 : 2
 					var table = allTables[tableIdx]
-					if (!table) { console.log('Table not found at index', tableIdx); return }
+					if (!table) { return }
 
 					// Get all column li elements (first is label, rest are data columns)
 					var cols = table.querySelectorAll('[class*="optRecordBar-li"]')
-					console.log('Found cols:', cols.length)
-
+					
 					// colIdx + 1 because first col is label
 					var col = cols[colIdx + 1]
-					if (!col) { console.log('Col not found at', colIdx + 1); return }
+					if (!col) { return }
 
 					// Get val cells in this column (R=index 0, L=index 1 among val cells)
 					var valCells = col.querySelectorAll('[class*="optRecordBar-val"]')
-					console.log('Found val cells:', valCells.length)
-
+					
 					var cellIndex = lr === 'R' ? 0 : 1
 					var cell = valCells[cellIndex]
-					if (!cell) { console.log('Cell not found'); return }
+					if (!cell) { return }
 
 					// Find the actual input element inside
 					var input = cell.querySelector('input')
-					console.log('Found input:', !!input)
-
+					
 					if (input) {
 						// Remove all blocks
 						var uniInput = cell.querySelector('uni-input')
@@ -2785,12 +2835,10 @@ that.searchClient()
 						setTimeout(function() {
 							input.focus()
 							// Dispatch touch event to simulate tap
-							console.log('Input focused')
-						}, 100)
+													}, 100)
 					}
 				} catch(e) {
-					console.log('Manual input error:', e)
-				}
+									}
 			}, 200)
 		},
 		opt_toggleSign(sign) {
@@ -2801,6 +2849,94 @@ that.searchClient()
 			}
 		},
 
+
+
+		opt_openNumKey() {
+			var popup = this.optPopup
+			this.numKeySection = popup.section || 'main'
+			this.numKeyIndex = popup.index
+			this.numKeyLR = popup.LR
+			this.numKeyPlusCut = ''
+			this.numKeyNum = ''
+			var top = popup.y
+			// Position: check if enough space below
+			if (top + 55 + 320 > (window.innerHeight || 800)) {
+				top = top - 320 - 50
+				if (top < 0) top = (window.innerHeight || 800) - 320
+			} else {
+				top = top + 55
+			}
+			this.numKeyTop = top
+			this.optPopup.show = false
+			this.numKeyShow = true
+		},
+
+		nk_plusCut(type) {
+			this.numKeyPlusCut = type
+		},
+
+		nk_key(type) {
+			var A = ['-', '+']
+			var B = ['0','1','2','3','4','5','6','7','8','9']
+			var C = ['.', '.00', '.25', '.50', '.75']
+
+			if (A.indexOf(type) > -1) {
+				this.numKeyPlusCut = type
+			} else if (B.indexOf(type) > -1) {
+				if (this.numKeyNum === '0') {
+					this.numKeyNum = type
+				} else {
+					this.numKeyNum = this.numKeyNum + type
+				}
+			} else if (C.indexOf(type) > -1) {
+				var num = this.numKeyNum
+				var lastChar = num.substr(num.length - 1, 1)
+				if (num === '') {
+					this.numKeyNum = '0' + type
+				} else if (num.indexOf('.') > -1 && lastChar !== '.') {
+					// already has dot, ignore
+				} else if (num.indexOf('.') > -1 && lastChar === '.') {
+					this.numKeyNum = num.substr(0, num.length - 1) + type
+				} else {
+					this.numKeyNum = num + type
+				}
+			}
+		},
+
+		nk_back() {
+			if (this.numKeyNum === '') {
+				this.numKeyPlusCut = ''
+			} else {
+				this.numKeyNum = this.numKeyNum.slice(0, -1)
+			}
+		},
+
+		nk_clear() {
+			this.numKeyPlusCut = ''
+			this.numKeyNum = ''
+		},
+
+		nk_yes() {
+			var numTotal = this.numKeyPlusCut + this.numKeyNum
+			var last = numTotal.substr(numTotal.length - 1, 1)
+			if (last === '.' || this.numKeyNum === '') {
+				numTotal += '0'
+			}
+			// Write value to the correct cell
+			var tabKey = this.numKeySection === 'main' ? 'mainTab' : this.numKeySection === 'original' ? 'originalTab' : 'autoTab'
+			var col = this.addOptView[tabKey][this.numKeyIndex]
+			if (col) {
+				if (this.numKeyLR === 'R') col.r = numTotal
+				else col.l = numTotal
+			}
+			this.numKeyShow = false
+		},
+
+		nk_selectMode() {
+			// Switch back to preset selection mode
+			this.numKeyShow = false
+			this.optPopup.show = true
+		},
 
 
 		logoutFun() {
@@ -7485,5 +7621,128 @@ that.searchClient()
 /* input不拦截点击，让父层view捕获 */
 .optRecordBar-val uni-input {
 	pointer-events: none;
+}
+
+/* ========== 虚拟键盘 - 匹配原项目 ========== */
+.numKeyBox {
+	position: fixed;
+	top: 0; left: 0;
+	width: 100%; height: 0;
+	z-index: 99999;
+	overflow: visible;
+}
+.NK_bg {
+	position: fixed;
+	top: 0; left: 0;
+	width: 100%; height: 100%;
+	background: rgba(0,0,0,0);
+}
+.NK_mainCon {
+	position: relative;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, 0);
+	width: 500px;
+	padding-bottom: 20px;
+}
+.NK_main {
+	position: relative;
+	padding: 8px 15px 15px 15px;
+	min-height: 200px;
+	background: #fff;
+	border-radius: 15px;
+	box-shadow: 0 0 10px #bfbfbf;
+}
+.NK_close {
+	position: absolute;
+	right: -15px;
+	top: -15px;
+	cursor: pointer;
+	user-select: none;
+}
+.NK_close text {
+	display: inline-block;
+	width: 40px;
+	height: 40px;
+	box-sizing: border-box;
+	border-radius: 100%;
+	border: 3px solid #fff;
+	color: #fff;
+	background: #ff5245;
+	text-align: center;
+	line-height: 38px;
+	box-shadow: 0 0 10px #bfbfbf;
+}
+.NK_top {
+	height: 45px;
+	text-align: center;
+	color: #03a9f4;
+	padding-bottom: 10px;
+	font-size: 28px;
+}
+.NK_plusMinus {
+	position: absolute;
+	top: 13px;
+	user-select: none;
+}
+.NK_plusMinus text {
+	display: inline-block;
+	width: 35px;
+	height: 35px;
+	text-align: center;
+	line-height: 35px;
+	color: #333;
+	background: #ebebeb;
+	border-radius: 100%;
+	margin-right: 5px;
+	cursor: pointer;
+	font-size: 18px;
+}
+.NK_selectMode {
+	position: absolute;
+	top: 13px;
+	right: 15px;
+	display: inline-block;
+	width: 80px;
+	height: 35px;
+	text-align: center;
+	line-height: 35px;
+	color: #333;
+	background: #ebebeb;
+	border-radius: 100px;
+	cursor: pointer;
+	user-select: none;
+	font-size: 13px;
+}
+.NK_info_ul {
+	display: flex;
+	flex-wrap: wrap;
+}
+.NK_info_ul text {
+	display: inline-block;
+	width: calc(20% - 10px);
+	padding: 12px 0;
+	margin: 5px 5px;
+	border-radius: 5px;
+	background: #ebebeb;
+	cursor: pointer;
+	font-size: 20px;
+	color: #333;
+	text-align: center;
+	user-select: none;
+}
+.NK_info_ul .NK_colspan_3 {
+	width: calc(60% - 10px);
+}
+.NK_info_ul .NK_yes {
+	color: #fff;
+	background: #03a9f4;
+}
+
+.ygSetBg2 {
+	position: fixed;
+	top: 0; left: 0;
+	width: 100%; height: 100%;
+	background: rgba(0,0,0,0);
 }
 </style>
